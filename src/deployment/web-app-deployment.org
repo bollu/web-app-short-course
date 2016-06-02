@@ -83,7 +83,7 @@
    python /var/www/db_setup.py
    #+END_EXAMPLE
 ** Update =config.py= file
-   update the =APP_URL= value with the ip-address and port number to run the application.
+   update the =APP_URL= value with the ip-address to run the application.
    #+BEGIN_EXAMPLE
    emacs -nw /var/www/src/config.py 
    APP_URL = "<ip-address>"

@@ -6,6 +6,339 @@
 #+SETUPFILE: ./org-templates/level-0.org
 #+options: ^:nil
 
+* Setup & Run the application on development environment
+  
+** Installing emacs
+   #+BEGIN_EXAMPLE
+   sudo apt-get update
+   sudo apt-get install -y emacs
+   #+END_EXAMPLE
+
+
+** Installing Org 8.2.10
+   #+BEGIN_EXAMPLE
+   mkdir -p ~/emacs/lisp
+   cd ~/emacs/lisp
+   wget http://orgmode.org/org-8.2.10.tar.gz
+   tar zxvf org-8.2.10.tar.gz
+   #+END_EXAMPLE
+
+
+** cloning the repository & checkout the branch
+   #+BEGIN_EXAMPLE
+   cd ~
+   git clone https://github.com/vlead/web-app-short-course.git
+   cd web-app-short-course
+   git checkout deployment
+   #+END_EXAMPLE
+
+
+** Creation of Virtual Environment
+
+  + Create Virtual Environemnt =venv= in the =web-app-short-course= directory
+  #+BEGIN_EXAMPLE
+  virtualenv venv
+  #+END_EXAMPLE
+  + Activate the Virtual Environment
+  #+BEGIN_EXAMPLE
+  source venv/bin/activate
+  #+END_EXAMPLE
+
+
+** build the sources
+   #+BEGIN_EXAMPLE
+   make
+   #+END_EXAMPLE
+
+   
+** Creation of database
+  - Login to mysql
+    #+BEGIN_EXAMPLE
+    mysql -u <username> -p<password>
+    #+END_EXAMPLE
+  - Show all databases
+    #+BEGIN_EXAMPLE
+    show databases;
+    #+END_EXAMPLE
+  - If <userdirectory> database is not present, create it
+    #+BEGIN_EXAMPLE
+    create database userdirectory
+    #+END_EXAMPLE
+  
+    Exit out of the mysql console
+
+
+** Setting up dependencies
+
+  Install all the dependencies for running the =web-app-short-course= applciation.
+  The =setup.py= script is in the =build/code/= directory
+  #+BEGIN_EXAMPLE
+  cd build/code/
+  python setup.py install
+  #+END_EXAMPLE
+  Note :- If you found error something like =error: Couldn't find a setup script
+  in /tmp/easy_install-oTRjpD/oursql-0.9.3.2.linux-i686.tar.gz= please
+  execute below steps skip otherwise
+#+BEGIN_EXAMPLE
+
+mkdir oursql
+cd oursql
+wget https://pypi.python.org/packages/8c/88/9f53a314a2af6f56c0a1249c5673ee384b85dc791bac5c1228772ced3502/oursql-0.9.3.2.tar.gz#md5=ade5959a6571b1626966d47f3ab2d315
+tar xvf oursql-0.9.3.2.tar.gz
+cd oursql-0.9.3.2
+python setup.py install
+
+#+END_EXAMPLE
+
+
+** Set SQLALCHEMY_DATABASE_URI
+  The variable =SQLALCHEMY_DATABASE_URI= has to be set to proper value in
+  =build/code/src/config.py= so that the application can use the database.
+  #+BEGIN_EXAMPLE
+  SQLALCHEMY_DATABASE_URI = 'mysql+oursql://root:pswd@localhost/userdirectory'
+  #+END_EXAMPLE
+
+
+** Insert Dafault data
+  Run db_setup.py to create the database schema & default user in the system
+  #+BEGIN_EXAMPLE
+  cd build/code/
+  python db_setup.py
+  #+END_EXAMPLE
+
+
+** Run the application
+  
+  The application can now be run from the =build/code/runtime/rest/= directory
+  #+BEGIN_EXAMPLE
+  cd build/code/src/
+  unset http_proxy
+  unset https_proxy
+  python app.py
+  #+END_EXAMPLE
+
+
+** Access the application
+  
+  The application is accessed at =http://localhost:5000=
+
+
+* Application Programming Interface
+
+** Get all users in system
+  :PROPERTIES:
+  :CUSTOM_ID: get_workshop_usage
+  :END:       
+    - URL :: /users
+
+    - Method :: GET
+
+    - URL Params :: None
+
+    - Success Response ::
+      + Code: 200
+
+      + Content:
+#+BEGIN_EXAMPLE
+[
+  {
+    "email": "xyz@gmail.com",
+    "role": {
+      "id": 1,
+      "name": "admin"
+    },
+    "id": 1,
+    "name": "Admin User"
+  }
+]
+
+#+END_EXAMPLE
+
+
+** Get user by id
+  :PROPERTIES:
+  :CUSTOM_ID: get_question_by_id
+  :END:          
+    - URL :: /users/<id>
+
+    - Method :: GET
+
+    - URL Params ::
+      None
+
+    - Success Response ::
+      + Code: 200
+
+      + Content:
+#+BEGIN_EXAMPLE
+{
+  "email": "xyz@gmail.com", 
+  "id": 1, 
+  "name": "Admin User", 
+  "role": {
+    "id": 1, 
+    "name": "admin"
+  }
+}
+#+END_EXAMPLE
+  
+    - Error Response ::
+
+      + Code: 400 Bad Request
+    
+
+** Add users to the system. 
+  :PROPERTIES:
+  :CUSTOM_ID: save_generic_feedback_form
+  :END:    
+   The authentication for the =POST= is sent as part of header.
+   - URL :: /users
+
+   - Method :: POST
+
+   - Data Params ::
+#+BEGIN_EXAMPLE
+  {
+  "email": "test@gmail.com", 
+  "name": "test", 
+  "role_id": [1]
+}
+#+END_EXAMPLE
+
+   - Success Response ::
+     + Code: 200
+
+     + Content:
+       {
+         status: "success"
+       }
+
+   - Error Response ::
+     + Code: 400 Bad Request
+
+     + Content: { error : "some of the parameters are not part of the
+       request" }
+
+
+** Update the user
+  :PROPERTIES:
+  :CUSTOM_ID: update_question
+  :END:    
+
+   - URL :: /users/<id>
+
+   - Method :: PUT
+
+   - Payload ::
+#+BEGIN_EXAMPLE
+
+{
+"name" : "admin user"
+}
+#+END_EXAMPLE
+
+
+   - Success Response ::
+     + Code: 200
+
+     + Content:
+       {
+         status: "success"
+       }
+
+   - Error Response ::
+     + Code: 401 UNAUTHORIZED
+
+     + Content: { error : "Wrong Key configured" }
+
+     OR
+
+     + Code: 400 Bad Request
+
+     + Content: { error : "some of the parameters are not part of the
+       request" }
+
+
+** Delete user
+  :PROPERTIES:
+  :CUSTOM_ID: delete_question
+  :END:    
+
+   - URL :: /users/<id>
+
+   - Method :: DELETE
+
+   - Data Params ::
+     None
+
+   - Success Response ::
+     + Code: 200
+
+     + Content:
+#+BEGIN_EXAMPLE
+{
+  "id": 2, 
+  "status": "success"
+}
+#+END_EXAMPLE       
+
+
+** Get all roles in system
+  :PROPERTIES:
+  :CUSTOM_ID: get_workshop_usage
+  :END:       
+    - URL :: /roles
+
+    - Method :: GET
+
+    - URL Params :: None
+
+    - Success Response ::
+      + Code: 200
+
+      + Content:
+#+BEGIN_EXAMPLE
+[
+  {
+    "id": 1,
+    "name": "admin"
+  },
+  {
+    "id": 2,
+    "name": "user"
+  }
+]
+
+#+END_EXAMPLE
+
+
+** Get role by id
+  :PROPERTIES:
+  :CUSTOM_ID: get_question_by_id
+  :END:          
+    - URL :: /roles/<id>
+
+    - Method :: GET
+
+    - URL Params ::
+      None
+
+    - Success Response ::
+      + Code: 200
+
+      + Content:
+#+BEGIN_EXAMPLE
+{
+  "id": 1, 
+  "name": "admin"
+}
+#+END_EXAMPLE
+  
+    - Error Response ::
+
+      + Code: 400 Bad Request
+    
+
 * Manual Deployment of =web-app-short-course= Application
 ** Log In to base4 Machine
    Use your LDAP Account credentials to login:

@@ -131,7 +131,7 @@ python setup.py install
 
 ** Get all users in system
   :PROPERTIES:
-  :CUSTOM_ID: get_workshop_usage
+  :CUSTOM_ID: get_users
   :END:       
     - URL :: /users
 

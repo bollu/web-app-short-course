@@ -24,7 +24,7 @@
    #+END_EXAMPLE
 
 
-** cloning the repository & checkout the branch
+** Clone the repository & checkout the branch
    #+BEGIN_EXAMPLE
    cd ~
    git clone https://github.com/vlead/web-app-short-course.git

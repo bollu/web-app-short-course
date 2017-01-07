@@ -114,11 +114,12 @@ def get_users():
 #+BEGIN_SRC python :tangle ../../src/api.py :eval no
 @api.route('/roles', methods=['GET'])
 def get_roles():
+    """
     if 'session' not in request.json:
         print "throw error from get_roles"
     else:
         print "get_roles -- Check according to your specification"
-
+    """
     return jsonify_list([i.to_client() for i in Role.get_all()])
 #+END_SRC
 
@@ -174,7 +175,7 @@ def create_user():
         name = request.json['name']
         email = request.json['email']
         role_id = request.json['role_id']
-        session_email = request.json['session']
+        #session_email = request.json['session']
 
         try:
             user = User(name=Name(name),
@@ -207,11 +208,12 @@ def create_user():
 def update_delete_user(id):
 
     ### Check if there is a session and act according to the specification
+    """
     if 'session' not in request.json:
         print "throw error"
     else:
         print "Check according to your specification"
-
+    """
     record = User.get_by_id(id)
     if not record:
         abort(404, 'No %s with id %s' % (user, id))

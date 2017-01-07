@@ -88,6 +88,10 @@ tar xvf oursql-0.9.3.2.tar.gz
 cd oursql-0.9.3.2
 python setup.py install
 
+# Re run the setup.py to install pre-requisites
+cd ../..
+python setup.py install
+
 #+END_EXAMPLE
 
 

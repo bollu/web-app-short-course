@@ -113,7 +113,7 @@ python setup.py install
 
 ** Run the application
   
-  The application can now be run from the =build/code/runtime/rest/= directory
+  The application can now be run from the =build/code/src= directory
   #+BEGIN_EXAMPLE
   cd build/code/src/
   unset http_proxy

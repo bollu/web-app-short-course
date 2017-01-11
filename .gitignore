@@ -13,3 +13,4 @@ src/style
 sitemap*
 lint_output
 venv/
+oursql/

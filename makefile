@@ -47,10 +47,8 @@ init: pull-literate-tools
 build: init write-version
 	emacs  --script elisp/publish.el
 	rsync -a ${SRC_DIR}/implementation/web/static ${BUILD_DIR}/code/src
-	rsync -a ${SRC_DIR}/implementation/web/templates ${BUILD_DIR}/code/src
-	rsync -a ${SRC_DIR}/implementation/web/mvc.jpg ${BUILD_DIR}/docs/implementation/web/	
-	rsync -a ${SRC_DIR}/${ORG_DIR} ${BUILD_DIR}/docs
-	rsync -a ${SRC_DIR}/${STYLE_DIR} ${BUILD_DIR}/docs
+#       rsync -a ${SRC_DIR}/${ORG_DIR} ${BUILD_DIR}/docs
+# 	rsync -a ${SRC_DIR}/${STYLE_DIR} ${BUILD_DIR}/docs
 	rm -f ${BUILD_DIR}/docs/*.html~
 
 # get the latest commit hash and its subject line
@@ -67,4 +65,3 @@ build-with-lint: build
 
 clean:	clean-literate
 	rm -rf ${BUILD_DIR}
-

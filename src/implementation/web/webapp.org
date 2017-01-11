@@ -1,0 +1,280 @@
+#+AUTHOR: Siddharth Bhat
+#+EMAIL: siddharth.bhat@iiit.ac.in
+#+DATE: <2017-01-09 Mon 22:22>
+
+We tangle all of the JS here
+* JS - Consolidated
+#+BEGIN_SRC js :tangle ../../src/static/js/main.js :eval no :noweb yes
+
+//system code
+<<mock_api>>
+<<rest_api>>
+<<hash_handler>>
+
+//user code
+<<user_api_choice>>
+
+//components
+<<user_component_auxiliary>>
+<<user_register_handler>>
+<<user_login_handler>>
+<<user_get_all_users_handler>>
+
+//NOTE: user_window_onload uses the handlers
+//so keep these below the handlers
+<<user_window_onload>>
+#+END_SRC
+
+
+* System JS - Mock API
+#+NAME: mock_api
+#+BEGIN_SRC js
+var MockAPI = {
+  users: [],
+<<mock_create_user>>
+<<mock_get_all_users>>
+};
+#+END_SRC
+** Create User
+#+NAME: mock_create_user
+#+BEGIN_SRC js
+  create_user: function(name, email, cb) {
+    this.users.push({name: name, email: email});
+  },
+#+END_SRC
+
+** Get all users
+#+NAME: mock_get_all_users
+#+BEGIN_SRC js
+get_all_users: function(cb) {
+    cb(this.users);
+}
+#+END_SRC
+
+* System JS - Rest API
+#+NAME: rest_api
+#+BEGIN_SRC js
+var RestAPI = {
+<<rest_endpoint_url>>
+<<rest_create_user>>
+<<rest_get_all_users>>
+};
+#+END_SRC
+** endpoint URL
+#+NAME: rest_endpoint_url
+#+BEGIN_SRC js
+url: "localhost:5000",
+#+END_SRC
+
+** Create user
+#+NAME: rest_create_user
+#+BEGIN_SRC js
+create_user: function(name, email, cb) {
+    $.post(this.url + "/users",
+           {name: name, email: email},
+           function(data) { console.log(data); cb() });
+},
+#+END_SRC
+
+** Get all users
+
+#+NAME: rest_get_all_users
+#+BEGIN_SRC js
+get_all_users: function (cb) {
+  $.get(this.url + "/users",
+        function(data) { console.log(data); cb() });
+}
+#+END_SRC
+
+
+* System JS - Window handler for # changes
+
+call =make_hash_handler= to attach a handler.
+
+Parameters:
+handler_functions :: { hash_regex : handler }
+whose keys are the hash strings and the values
+are the handler.
+
+#+NAME: hash_handler
+#+BEGIN_SRC js
+function make_hash_handler(handler_functions) {
+    $(window).on("hashchange", function(e) {
+	//strip hash out
+	hash = location.hash.substring(1);
+	console.log("new hash: ", hash);
+	//we use hasOwnProperty since we need to check if this
+	//object has it, not its parents (in the prototype chain)
+	if (handler_functions.hasOwnProperty(hash)) {
+            //invoke said handler function
+            handler_functions[hash]();
+	} else {
+            console.warn(`no handler for ${hash}`);
+	}
+    });
+};
+#+END_SRC
+
+
+
+User code that uses our library to build an API.
+
+
+User code: Pick between REST and Mock API, setup # handlers for
+views
+
+
+* User JS - Pick API choice
+#+NAME: user_api_choice
+#+BEGIN_SRC js
+var API = RestAPI;
+#+END_SRC
+
+* User JS - Window onload: setup # handlers, start from register
+#+NAME: user_window_onload
+#+BEGIN_SRC js
+window.onload = function() {
+    make_hash_handler({register: register_handler,
+                       login:  login_handler,
+                       get_all_users: get_all_users_handler,});
+
+    //TODO: figure out why this does not trigger onhashchange
+    window.location.hash = 'get_all_users';
+}
+#+END_SRC
+
+
+All components that are part of our single page application go here
+* User JS - Component auxiliary code
+#+NAME: user_component_auxiliary
+#+BEGIN_SRC js
+//use to hide all containers before displaying another container
+function hide_all_containers() {
+    $('#login-container').addClass("hidden");
+    $('#register-container').addClass("hidden");
+}
+#+END_SRC
+
+* User JS - Register Component
+
+#+NAME: register_html
+#+BEGIN_SRC html
+<div id = "register-container" class="hidden">
+  <form>
+    <label> Username </label>
+    <input type="text" name="username"/>
+    <label> Password </label>
+    <input type="text" name="password"/>
+    <label> Email </label>
+    <input type="text" name="email"/>
+    <input type="submit" name="register" />
+  </form>
+  <button onclick="window.location.hash='login'"> Goto Login </button>
+</div>
+#+END_SRC
+
+#+NAME: user_register_handler
+#+BEGIN_SRC js
+function register_handler() {
+    hide_all_containers()
+    $("#register-container").removeClass("hidden");
+}
+#+END_SRC
+* User JS - Login Component
+
+#+NAME: login_html
+#+BEGIN_SRC html
+<div id="login-container" class="hidden">
+  <form>
+    <label>Username</label>
+    <input type="text"/>
+    <label>Password</label>
+    <input type="text"/>
+  </form>
+  <button onclick="window.location.hash='register'"> Goto Register </button>
+</div>
+#+END_SRC
+
+#+NAME: user_login_handler
+#+BEGIN_SRC js
+function login_handler() {
+    hide_all_containers();
+    $("#login-container").removeClass("hidden");
+}
+#+END_SRC
+
+* User JS - Get all Users Component
+#+NAME: get_all_users_html
+#+BEGIN_SRC html
+<div id="get_all_users_container" class="hidden">
+</div>
+#+END_SRC
+
+#+NAME: user_get_all_users_handler
+#+BEGIN_SRC js
+function make_li_for_user(user) {
+    let li = $("<li>" + user.email + "</li>");
+    return li;
+}
+
+function make_ul_for_users() {
+    let ul = $("<ul></ul>");
+    return ul;
+}
+
+function get_all_users_handler() {
+    hide_all_containers();
+    var container = $('#get_all_users_container');
+    container.removeClass("hidden");
+    container.innerHTML = "";
+
+    API.get_all_users(function(users) {
+	let ul = make_u_for_usersl();
+	for(user in users) {
+	    let li = make_li_for_user(user);
+	    ul.append(li);
+	}
+        container.append(ul);
+    });
+
+
+}
+#+END_SRC
+
+
+* HTML: Consolidated
+#+BEGIN_SRC html :tangle ../../src/static/index.html :eval no :noweb yes
+<html>
+<head>
+<script src="js/jquery-3.1.1.min.js"></script>
+<script src="js/main.js"></script>
+<link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+<h1> Hello World </h1>
+
+
+<<register_html>>
+<<login_html>>
+<<get_all_users_html>>
+</body>
+</html>
+#+END_SRC
+
+
+* CSS
+
+#+BEGIN_SRC css :tangle ../../src/static/css/main.css
+body {
+  background-color: #EFEFEF;
+  padding-left: 80px;
+  padding-right: 80px;
+  padding-top: 20px;
+  font-family: monospace;
+
+}
+
+.hidden {
+  display: none;
+}
+#+END_SRC

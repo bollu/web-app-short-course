@@ -7,6 +7,7 @@ We tangle all of the JS here
 #+BEGIN_SRC js :tangle ../../src/static/js/main.js :eval no :noweb yes
 
 //system code
+<<post_json>>
 <<mock_api>>
 <<rest_api>>
 <<hash_handler>>
@@ -19,12 +20,28 @@ We tangle all of the JS here
 <<user_register_handler>>
 <<user_login_handler>>
 <<user_get_all_users_handler>>
+<<user_create_user_handler>>
 
 //NOTE: user_window_onload uses the handlers
 //so keep these below the handlers
 <<user_window_onload>>
 #+END_SRC
 
+* System JS - $.Post equivalent to send AJAX
+#+NAME: post_json
+#+BEGIN_SRC js
+  function post_json(url, data, callback) {
+      $.ajax({
+          url:url,
+          type:"POST",
+          data:data,
+          contentType:"application/json; charset=utf-8",
+          dataType:"json",
+          success: callback
+      });
+  }
+  
+#+END_SRC
 
 * System JS - Mock API
 #+NAME: mock_api
@@ -63,10 +80,12 @@ var RestAPI = {
 ** Create user
 #+NAME: rest_create_user
 #+BEGIN_SRC js
-  create_user: function(name, email, cb) {
-      $.post("/users",
-             {name: name, email: email},
-             function(data) { console.log(data); cb(data) });
+  create_user: function(name, email, role_id, cb) {
+      console.log("create_user name: " + name + " |email: " + 
+                  email + " |role_id: " + role_id);
+      post_json("/users",
+                {name: name, email: email, role_id: role_id},
+                function(data) { console.log(data); cb(data) });
   },
 #+END_SRC
    
@@ -165,26 +184,27 @@ var API = RestAPI;
 * User JS - Window onload: setup # handlers, start from register
 #+NAME: user_window_onload
 #+BEGIN_SRC js
-  window.onload = function() {
-      make_hash_handler({register: register_handler,
-                         login:  login_handler,
-                         get_all_users: get_all_users_handler,});
-  
-      //TODO: figure out why this does not trigger onhashchange
-      //TRIAL: check if preventing race condition helps
-      setTimeout(function() {
-          let current_hash = get_window_hash_url();
-          if (current_hash == "") {
-              console.log("defaulting #url to get_all_users");
-              current_hash = "get_all_users";
-          }
-          console.log("navigating to: #" + current_hash);
-  
-          navigate(current_hash);
-          //HACK: I don't know why this is needed for the first hash change. figure it out!
-          $(window).trigger("hashchange")
-      }, 100);
-  }
+    window.onload = function() {
+        make_hash_handler({register: register_handler,
+                           login:  login_handler,
+                           get_all_users: get_all_users_handler,
+                           create_user: create_user_handler});
+    
+        //TODO: figure out why this does not trigger onhashchange
+        //TRIAL: check if preventing race condition helps
+        setTimeout(function() {
+            let current_hash = get_window_hash_url();
+            if (current_hash == "") {
+                console.log("defaulting #url to get_all_users");
+                current_hash = "get_all_users";
+            }
+            console.log("navigating to: #" + current_hash);
+    
+            navigate(current_hash);
+            //HACK: I don't know why this is needed for the first hash change. figure it out!
+            $(window).trigger("hashchange")
+        }, 100);
+    }
 #+END_SRC
 
 
@@ -192,11 +212,12 @@ All components that are part of our single page application go here
 * User JS - Hide all containers
 #+NAME: user_component_auxiliary
 #+BEGIN_SRC js
-  //use to hide all containers before displaying another container
-  function hide_all_containers() {
-      $('#login-container').addClass("hidden");
-      $('#register-container').addClass("hidden");
-      $('#get-all-users-container').addClass("hidden");
+    //use to hide all containers before displaying another container
+    function hide_all_containers() {
+        $('#login-container').addClass("hidden");
+        $('#register-container').addClass("hidden");
+        $('#get-all-users-container').addClass("hidden");
+        $('#create-user-container').addClass("hidden");
   }
 #+END_SRC
 
@@ -289,6 +310,50 @@ function login_handler() {
   }
 #+END_SRC
 
+* User JS - Create User Component
+#+NAME: create_user_html
+#+BEGIN_SRC html
+  <div id='create-user-container'>
+    <label> Username: </label>
+    <input type="text" id="create-user-username"></input>
+  
+    <label> Email: </label>
+    <input type="text" id="create-user-email"></input>
+  
+    <label> Role ID: </label>
+    <select id="create-user-role-id">
+      <option value="1"> 1 </option>
+      <option value="2"> 2</option>
+    </select>
+    <button id="create-user-button" onclick="create_user_callback()"> Create User </button>
+    <div id="create-user-error-box">
+    </div>
+  </div>
+  
+#+END_SRC
+
+#+NAME: user_create_user_handler
+#+BEGIN_SRC js
+  function create_user_handler() {
+      hide_all_containers();
+      $("#create-user-container").removeClass("hidden");
+  }
+  
+  function create_user_callback() {
+      let username = $('#create-user-username').text;
+      let email = $('#create-user-email').text;
+      let role_id = $('#create-user-role-id').text;
+      console.log("create user callback called")
+      $("#create-user-error-box").innerHTML = "";
+      if (username == "") {
+          $("#create-user-error-box").innerHTML = "Please fill in username";
+      }
+      else if (email == "") {
+          $("#create-user-error-box").innerHTML = "Please fill in email";
+      }
+      API.create_user(username, email, role_id)
+  }
+#+END_SRC
 
 * HTML: Consolidated
 
@@ -312,6 +377,7 @@ so that when we are actually deploying this app, the static files can be served 
 <<register_html>>
 <<login_html>>
 <<get_all_users_html>>
+<<create_user_html>>
 </body>
 </html>
 #+END_SRC

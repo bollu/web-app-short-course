@@ -30,14 +30,22 @@ We tangle all of the JS here
 * System JS - $.Post equivalent to send AJAX
 #+NAME: post_json
 #+BEGIN_SRC js
-  function post_json(url, data, callback) {
+  function post_json(url, data, callback, error_callback) {
       $.ajax({
-          url:url,
-          type:"POST",
-          data:data,
-          contentType:"application/json; charset=utf-8",
-          dataType:"json",
-          success: callback
+          url: url,
+          type: "POST",
+          data: JSON.stringify(data),
+          contentType: "application/json; charset=utf-8",
+          dataType: "json",
+          success: callback,
+          error: function (request, status, error) {
+              console.log("error on: " + url + 
+                          "\n|data: " + data  + 
+                          "\n|RESPONSE: " + request.responseText + 
+                          "\n| status: " + status + 
+                          "\n| error: " + error);
+              error_callback(request, status, error);
+          }
       });
   }
   
@@ -340,10 +348,12 @@ function login_handler() {
   }
   
   function create_user_callback() {
-      let username = $('#create-user-username').text;
-      let email = $('#create-user-email').text;
-      let role_id = $('#create-user-role-id').text;
       console.log("create user callback called")
+
+      let username = $('#create-user-username').val();
+      let email = $('#create-user-email').val();
+      let role_id = $('#create-user-role-id').val();
+
       $("#create-user-error-box").innerHTML = "";
       if (username == "") {
           $("#create-user-error-box").innerHTML = "Please fill in username";

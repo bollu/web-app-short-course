@@ -1,12 +1,44 @@
-# web-app-short-course
+* Web App Short Course
 
-## Shortcomings of literate style
+This is the web app written for ITWS2 at IIIT-H for the spring 2017
+semester. I have chronicled my opinions on writing literate code (specifically,
+using the [[http://github.com/vlead/literate-tools][literate-tools package written at IIIT-H]].
 
-- increasingly long iteration cycles
-- lack of incremental builds make experimentation frustrating
-- need to exit =build/= folder and come back to it since all inodes are destroyed
-- painful to track down errors since the files are generated
+** Shortcomings of literate style
+
+- Increasingly long iteration cycles since it does not cache builds
+- Lack of incremental builds make experimentation frustrating
+- Peed to exit =build/= folder and come back to it since all inodes are destroyed
+- Painful to track down errors since the files are generated
 - Literate code does not seem to increase code quality. Indeed, docs and code
   sometimes contradict each other making it confusing
-- cannot use features like flask's instant reload because it rewrites every single file (and folder structure)
-- weird editing errors (=s q p ?= interlocking for example) that won't even exist with something sane
+- Cannot use features like flask's instant reload because it rewrites every single file (and folder structure)
+- Weird editing errors (=s q p ?= interlocking for example) that won't even exist with something sane
+- Cannot use chrome dev tools effectifely (eg: load files so that chrome can track them and save changes)
+- =literate-tools= is homegrown, lots of installation weirdness (we witnessed many during lab: needs =LaTeX=, strange
+  locking errors, why does org not build, etc.)
+- Error reporting is so poor that it feels like it wishes to mock the user
+- You can only *tangle to one file once*.
+- Does not warn about =<<missing_links>>= (rather, it does, but the eror is entirely unhepful with no line number)
+- Breaking up code forces one to worry about syntactic constructs. For example, to break up =JSON=, one needs to
+  keep the = , = between =JSON= objects in some part of a =SRC= block. It cannot be tangled into the code in a superblock.
+  This makes tangling awkward. Look at the code for =MockAPI= or =RESTApi= in =webapp.org= to see examples of this.
+- Hard to edit large chunks of code. Interleaving prose and code (without syntax highlighting) makes it quite awkward
+  to use, since it is hard to use things like go-to-defintion which does not work on =.org= files. Semantic information
+  is hard to come by since most tools do not understand =.org= files
+** List of bugs found in web-app-short-course
+
+*** [[https://github.com/vlead/web-app-short-course/blame/deployment/src/implementation/rest/index.org#L172][Role ID is not checked for existence in `create_user`]]
+
+One liner to pwn:
+
+#+BEGIN_SRC python
+import requests; requests.post("http://localhost:5000/users", json={"name":"bollu", "email":"a@b.com"}).text
+#+END_SRC
+
+*** [[https://github.com/vlead/web-app-short-course/blame/deployment/src/implementation/rest/index.org#L66][Login returns nothing on GET request, causes crash]]
+One liner to pwn:
+
+#+BEGIN_SRC python
+import requests; requests.get("http://localhost:5000/auth/login", json={}).text
+#+END_SRC

@@ -55,35 +55,29 @@ get_all_users: function(cb) {
 #+NAME: rest_api
 #+BEGIN_SRC js
 var RestAPI = {
-<<rest_endpoint_url>>
 <<rest_create_user>>
 <<rest_get_all_users>>
 };
-#+END_SRC
-** endpoint URL
-#+NAME: rest_endpoint_url
-#+BEGIN_SRC js
-url: "localhost:5000",
 #+END_SRC
 
 ** Create user
 #+NAME: rest_create_user
 #+BEGIN_SRC js
-create_user: function(name, email, cb) {
-    $.post(this.url + "/users",
-           {name: name, email: email},
-           function(data) { console.log(data); cb() });
-},
+  create_user: function(name, email, cb) {
+      $.post("/users",
+             {name: name, email: email},
+             function(data) { console.log(data); cb(data) });
+  },
 #+END_SRC
-
+   
 ** Get all users
 
 #+NAME: rest_get_all_users
 #+BEGIN_SRC js
-get_all_users: function (cb) {
-  $.get(this.url + "/users",
-        function(data) { console.log(data); cb() });
-}
+  get_all_users: function (cb) {
+    $.get("/users",
+          function(data) { console.log(data); cb(data) });
+  }
 #+END_SRC
 
 
@@ -123,7 +117,26 @@ User code that uses our library to build an API.
 User code: Pick between REST and Mock API, setup # handlers for
 views
 
-
+* User JS - Model State
+#+NAME: user_model_state
+#+BEGIN_SRC js
+  
+  function make_state_object() {
+      private_state = {
+          current_user: null
+      };
+  
+      state_obj = {
+          set_current_user: function(user) { private_state.current_user = user; },
+          get_current_user: function() { console.assert(private_state.current_user != null); return this.current_user; }
+      };
+  
+      return state_obj;
+  }
+  //have a global STATE object that has all of the model state
+  STATE = make_state_object();
+  
+#+END_SRC js
 * User JS - Pick API choice
 #+NAME: user_api_choice
 #+BEGIN_SRC js
@@ -212,43 +225,53 @@ function login_handler() {
 
 #+NAME: user_get_all_users_handler
 #+BEGIN_SRC js
-function make_li_for_user(user) {
-    let li = $("<li>" + user.email + "</li>");
-    return li;
-}
-
-function make_ul_for_users() {
-    let ul = $("<ul></ul>");
-    return ul;
-}
-
-function get_all_users_handler() {
-    hide_all_containers();
-    var container = $('#get_all_users_container');
-    container.removeClass("hidden");
-    container.innerHTML = "";
-
-    API.get_all_users(function(users) {
-	let ul = make_u_for_usersl();
-	for(user in users) {
-	    let li = make_li_for_user(user);
-	    ul.append(li);
-	}
-        container.append(ul);
-    });
-
-
-}
+  function make_li_for_user(user) {
+      console.log("user: " + user + "|email: " + user.email + "|name: " + user.name)
+      let li = $("<li>" + "Name: " + user.name + " | Email: " + user.email + "</li>");
+      return li;
+  }
+  
+  function make_ul_for_users() {
+      let ul = $("<ul></ul>");
+      return ul;
+  }
+  
+  function get_all_users_handler() {
+      hide_all_containers();
+      var container = $('#get_all_users_container');
+      container.removeClass("hidden");
+      container.innerHTML = "";
+  
+      API.get_all_users(function(users) {
+          console.log("users: " + users);
+          let ul = make_ul_for_users();
+          for(var i = 0; i < users.length; ++i) {
+              let user = users[i];
+              let li = make_li_for_user(user);
+              ul.append(li);
+          }
+          container.append(ul);
+      });
+  
+  
+  }
 #+END_SRC
 
 
 * HTML: Consolidated
-#+BEGIN_SRC html :tangle ../../src/static/index.html :eval no :noweb yes
+
+We need to put the HTML files in a =templates= folder since we are returning the HTML file
+using =render_template= in flask. We will change this eventually to be served by our web server.
+
+Notice the =static/= in our URLs that is used to refer to our static files. We follow this convention
+so that when we are actually deploying this app, the static files can be served by apache/ngix/whatever
+
+#+BEGIN_SRC html :tangle ../../src/templates/index.html :eval no :noweb yes
 <html>
 <head>
-<script src="js/jquery-3.1.1.min.js"></script>
-<script src="js/main.js"></script>
-<link rel="stylesheet" href="css/main.css" />
+<script src="static/js/jquery-3.1.1.min.js"></script>
+<script src="static/js/main.js"></script>
+<link rel="stylesheet" href="static/css/main.css" />
 </head>
 <body>
 <h1> Hello World </h1>

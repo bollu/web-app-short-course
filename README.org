@@ -1,1 +1,12 @@
 # web-app-short-course
+
+## Shortcomings of literate style
+
+- increasingly long iteration cycles
+- lack of incremental builds make experimentation frustrating
+- need to exit =build/= folder and come back to it since all inodes are destroyed
+- painful to track down errors since the files are generated
+- Literate code does not seem to increase code quality. Indeed, docs and code
+  sometimes contradict each other making it confusing
+- cannot use features like flask's instant reload because it rewrites every single file (and folder structure)
+- weird editing errors (=s q p ?= interlocking for example) that won't even exist with something sane

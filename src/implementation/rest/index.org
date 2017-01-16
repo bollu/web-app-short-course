@@ -56,7 +56,19 @@ config = {
 
 ** GET all users
 
+@api.route("/", methods=['GET'])
+def index():
+    return render_template("index.html")
+
+
 #+BEGIN_SRC python :tangle ../../src/api.py :eval no
+
+@api.route("/", methods=['GET'])
+def index():
+    if request.method == 'GET':
+    	return render_template("index.html")
+
+
 @api.route('/users', methods=['GET'])
 def get_users():
 #    if 'session' not in request.json:
